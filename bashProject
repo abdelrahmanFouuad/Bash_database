@@ -1,0 +1,11 @@
+#!/usr/bin/bash
+shopt -s extglob
+
+error() {
+    echo "[ERROR] $1"
+    pause
+}
+
+success() {
+    echo "[SUCCESS] $1"
+}
