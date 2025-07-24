@@ -9,3 +9,149 @@ error() {
 success() {
     echo "[SUCCESS] $1"
 }
+if [ ! -d "$mybase" ]
+then
+mkdir "$mybase"
+fi
+selecteddatabase=""
+path="$mybase/$selecteddatabase" 
+function createdatabase()
+{
+while true 
+do
+read -p "enter the name of your database you want to create or type exit to exit the creation " dbname
+if [[ -z "$dbname" ]]
+then
+echo "database name must not be empty "
+continue
+fi
+if [[ "$dbname" == +([0-9]) ]]
+then 
+echo "database name must not be numbers "
+continue
+fi
+if ! [[ "$dbname" =~ ^[a-zA-Z]+$ ]]
+then
+echo "database contain only letters "
+continue
+fi
+if [[ "$dbname" == "exit" ]]
+then
+break 2
+fi
+if [[ -d "$mybase/$dbname" ]]
+then
+echo  "this database is already existed "
+echo "please enter a valid name to create database "
+continue
+fi
+
+mkdir "$mybase/$dbname"
+clear
+echo "database $dbname is created successfully "
+echo "enter one of the previous options again if you want "
+break
+done
+}
+function dropdatabase()
+{
+while true
+do
+read -p "enter the name of database you want to drop it or enter exit to go back " dbname
+if [[ -z "$dbname" ]]
+then
+echo "database name must not be empty "
+continue
+fi
+if [ -d "$mybase/$dbname" ]
+then
+rm -r "$mybase/$dbname"
+echo "database $dbname is successfully dropped "
+else
+echo "this database not found please "
+fi
+if [[ "$dbname" == "exit" ]]
+then
+break 2
+fi
+done
+}
+function connectdatabase(){
+while true
+do
+read -p "enter the name of database you want to connect to it or enter exit to go back  " dbname
+if [[ -z "$dbname" ]]
+then
+echo "database name must not be empty "
+continue
+fi
+if [[ "$dbname" == +([0-9]) ]]
+then 
+echo "database name must not be numbers "
+continue
+fi
+if ! [[ "$dbname" =~ ^[a-zA-Z]+$ ]]
+then
+echo "database contain only letters "
+continue
+fi
+if [[ "$dbname" == "exit" ]]
+then
+break 2
+fi
+if [[ -d "$mybase/$dbname" ]]
+then
+selecteddatabase=$dbname
+echo "you are connected to database $dbname "
+while true
+do
+select option in Creatatable Listtable Droptable Inserttable Selectfromtable deletefromtable updatetable exit
+do
+case $option in
+"Creatatable")
+createtable
+break
+;;
+"Listtable")
+ls  $mybase/$selecteddatabase/
+echo "they are list of tables "
+echo "enter again one of the options if you want "
+break
+;;
+"Droptable")
+droptable
+break
+;;
+"Inserttable")
+inserttable
+break
+;;
+"Selectfromtable")
+selecttable
+break
+;;
+"deletefromtable")
+deletetable
+break
+;;
+"updatetable")
+echo "table is updated "
+break
+;;
+"exit")
+break 2
+;;
+*)
+esac
+done
+done
+break
+else 
+echo " the name of database you want to connect is not found "
+echo "please enter again one of the previous options "
+continue
+fi
+done
+}
+
+
