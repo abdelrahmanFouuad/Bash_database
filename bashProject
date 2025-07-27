@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 shopt -s extglob
-
+pause() {
+    read -p "Press [Enter] key to continue"
+}
 error() {
     echo "[ERROR] $1"
     pause
@@ -76,6 +78,122 @@ break 2
 fi
 done
 }
+
+function createtable() {
+if [[ -z "$selecteddatabase" ]]
+then
+echo "No database selected. Please connect to a database first."
+return
+fi
+
+while true
+do
+read -p "enter table name or type exit to go back " tname
+
+if [[ -z "$tname" ]]
+then
+echo "table name must not be empty "
+continue
+fi
+
+if [[ "$tname" == +([0-9]) ]]
+then
+echo "table name must not be numbers "
+continue
+fi
+
+if ! [[ "$tname" =~ ^[a-zA-Z]+$ ]]
+then
+echo "table contain only letters "
+continue
+fi
+
+if [[ "$tname" == "exit" ]]
+then
+break 2
+fi
+
+if [[ -f "$mybase/$selecteddatabase/$tname" ]]
+then
+echo "this table is already existed "
+echo "please enter a valid name to create table "
+continue
+fi
+
+touch "$mybase/$selecteddatabase/$tname"
+touch "$mybase/$selecteddatabase/.$tname.metadata"
+echo "table $tname is created successfully in $selecteddatabase"
+
+read -p "enter number of the fields " fcount
+if ! [[ "$fcount" =~ ^[0-9]+$ ]] || [[ "$fcount" -le 0 ]]
+then
+echo "Invalid number of fields."
+rm "$mybase/$selecteddatabase/$tname"
+rm "$mybase/$selecteddatabase/.$tname.metadata"
+continue
+fi
+
+fieldnames=""
+fieldtypes=""
+fieldkeys=""
+flag=false
+
+for ((i = 0; i < fcount; i++))
+do
+read -p "enter the name of your field $(($i + 1)): " fname
+
+if [[ -z "$fname" ]] || [[ "$fname" != +([a-zA-Z_0-9]) ]]
+then
+echo "Invalid field name. Must contain only letters, numbers, underscore."
+((i--))
+continue
+fi
+
+while true
+do
+read -p "enter the type of your field $fname int or string: " ftype
+if [[ $ftype == "int" || $ftype == "string" ]]
+then
+break
+else
+echo "invalid"
+fi
+done
+
+if [[ $flag == false ]]
+then
+read -p "is this the primary key? type yes or no: " pkornot
+if [[ $pkornot == "yes" ]]
+then
+fieldkeys+="pk"
+flag=true
+else
+fieldkeys+="notpk"
+fi
+else
+fieldkeys+="notpk"
+fi
+
+if [[ $i -lt $((fcount - 1)) ]]
+then
+fieldnames+="$fname:"
+fieldtypes+="$ftype:"
+fieldkeys+=":"
+else
+fieldnames+="$fname"
+fieldtypes+="$ftype"
+fi
+done
+
+echo "$fieldnames" > "$mybase/$selecteddatabase/.$tname.metadata"
+echo "$fieldtypes" >> "$mybase/$selecteddatabase/.$tname.metadata"
+echo "$fieldkeys" >> "$mybase/$selecteddatabase/.$tname.metadata"
+echo "$fieldnames" > "$mybase/$selecteddatabase/$tname"
+clear
+break
+done
+}
+
 function connectdatabase(){
 while true
 do
