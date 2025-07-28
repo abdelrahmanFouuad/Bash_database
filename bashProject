@@ -11,9 +11,10 @@ error() {
 success() {
     echo "[SUCCESS] $1"
 }
+mybase="./databases"
 if [ ! -d "$mybase" ]
-then
-mkdir "$mybase"
+ then
+    mkdir "$mybase"
 fi
 selecteddatabase=""
 path="$mybase/$selecteddatabase" 
@@ -516,8 +517,8 @@ mainMenu() {
     done
 }
 tableMenu() {
-    if [[ -z "$selecteddatabase" ]]   
-  then
+    if [[ -z "$selecteddatabase" ]]
+     then
         error "No database selected. Cannot access table menu."
         return
     fi
@@ -535,24 +536,24 @@ tableMenu() {
         echo -n "Select an option: "
         read choice
         case $choice in
-        1) createtable ;;
-        2)
-            echo "Available Tables in '$selecteddatabase':"
-            if [[ -d "$mybase/$selecteddatabase" ]]   
-  then
-                ls -1 "$mybase/$selecteddatabase" | grep -v '^\.' | sort 2>/dev/null || echo "No tables found."
-            else
-                echo "Database directory not found."
-            fi
-            pause
-            ;;
-        3) droptable ;;
-        4) insertIntoTable ;;
-        5) selecttable ;;
-        6) deletetable ;;
-        7) updateTable ;;
-        8) break ;;
-        *) error "Wrong option." ;;
+            1) createtable ;;
+            2)
+                echo "Available Tables in '$selecteddatabase':"
+                if [[ -d "$mybase/$selecteddatabase" ]]
+                 then
+                    ls -1 "$mybase/$selecteddatabase" | grep -v '^\.' | sort 2>/dev/null || echo "No tables found."
+                else
+                    echo "Database directory not found."
+                fi
+                pause
+                ;;
+            3) droptable ;;
+            4) insertIntoTable ;;
+            5) selecttable ;;
+            6) deletetable ;;
+            7) updateTable ;;
+            8) break ;;
+            *) error "Wrong option." ;;
         esac
     done
 }
