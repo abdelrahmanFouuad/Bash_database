@@ -598,8 +598,34 @@ for i in "${!colNames[@]}"
 do
 colName="${colNames[$i]}"
 colType="${colTypes[$i]}"
-echo "Enter value for $col
-
+echo "Enter value for $colName ($colType):"
+read value
+if [[ "$colType" == "int" && ! "$value" =~ ^[0-9]+$ ]]
+then
+error "Invalid integer value for column '$colName'."
+return
+fi
+if [[ -n "$pKeyCol" && "$colName" == "$pKeyCol" && -n "$value" ]]
+then
+while IFS= read -r line || [[ -n "$line" ]]
+do
+if [[ -n "$line" ]]
+then
+IFS=':' read -r -a fields <<< "$line"
+if [[ $pKeyIndex -lt ${#fields[@]} ]] && [[ "${fields[$pKeyIndex]}" == "$value" ]]
+then
+error "Primary key value '$value' already exists."
+return
+fi
+fi
+done < <(tail -n +2 "$tableFile")
+fi
+rowData+=("$value")
+done
+local IFS=":"
+echo "${rowData[*]}" >> "$tableFile"
+success "Record inserted successfully."
+}
 
 
 updateTable() {
