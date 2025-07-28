@@ -414,79 +414,31 @@ function droptable() {
         fi
     done
 }
-function connectdatabase(){
-while true
-do
+function connectdatabase() {
+while true; do
 read -p "enter the name of database you want to connect to it or enter exit to go back  " dbname
-if [[ -z "$dbname" ]]
-then
+if [[ -z "$dbname" ]]; then
 echo "database name must not be empty "
 continue
 fi
-if [[ "$dbname" == +([0-9]) ]]
-then 
+if [[ "$dbname" == +([0-9]) ]]; then
 echo "database name must not be numbers "
 continue
 fi
-if ! [[ "$dbname" =~ ^[a-zA-Z]+$ ]]
-then
+if ! [[ "$dbname" =~ ^[a-zA-Z]+$ ]]; then
 echo "database contain only letters "
 continue
 fi
-if [[ "$dbname" == "exit" ]]
-then
+if [[ "$dbname" == "exit" ]]; then
 break 2
 fi
-if [[ -d "$mybase/$dbname" ]]
-then
+if [[ -d "$mybase/$dbname" ]]; then
 selecteddatabase=$dbname
 echo "you are connected to database $dbname "
-while true
-do
-select option in Creatatable Listtable Droptable Inserttable Selectfromtable deletefromtable updatetable exit
-do
-case $option in
-"Creatatable")
-createtable
+tableMenu
 break
-;;
-"Listtable")
-ls  $mybase/$selecteddatabase/
-echo "they are list of tables "
-echo "enter again one of the options if you want "
-break
-;;
-"Droptable")
-droptable
-break
-;;
-"Inserttable")
-inserttable
-break
-;;
-"Selectfromtable")
-selecttable
-break
-;;
-"deletefromtable")
-deletetable
-break
-;;
-"updatetable")
-echo "table is updated "
-break
-;;
-"exit")
-break 2
-;;
-*)
-esac
-done
-done
-break
-else 
+else
 echo " the name of database you want to connect is not found "
-echo "please enter again one of the previous options "
 continue
 fi
 done
