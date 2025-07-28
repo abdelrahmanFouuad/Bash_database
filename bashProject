@@ -431,7 +431,7 @@ mainMenu() {
         case $choice in
         1) createdatabase ;;
         2)
-            echo "Available Databases:"
+          echo "Available Databases:"
             ls -1 "$mybase" 2>/dev/null || echo "No databases found."
             pause
             ;;
@@ -483,6 +483,50 @@ tableMenu() {
         esac
     done
 }
+insertIntoTable() {
+if [[ -z "$selecteddatabase" ]]
+then
+error "No database selected. Please connect to a database first."
+return
+fi
+echo "Enter Table Name:"
+read tableName
+tableFile="$mybase/$selecteddatabase/$tableName"
+metaFile="$mybase/$selecteddatabase/.$tableName.metadata"
+if [ ! -f "$tableFile" ]
+then
+error "Table '$tableName' does not exist."
+return
+fi
+if [ ! -f "$metaFile" ]
+then
+error "Metadata for table '$tableName' not found."
+return
+fi
+metaDataNames=$(head -n 1 "$metaFile")
+metaDataTypes=$(head -n 2 "$metaFile" | tail -n 1)
+metaDataKeys=$(head -n 3 "$metaFile" | tail -n 1)
+IFS=':' read -r -a colNames <<< "$metaDataNames"
+IFS=':' read -r -a colTypes <<< "$metaDataTypes"
+IFS=':' read -r -a colKeys <<< "$metaDataKeys"
+pKeyCol=""
+pKeyIndex=-1
+for i in "${!colKeys[@]}"
+do
+if [[ "${colKeys[$i]}" == "pk" ]]
+then
+pKeyCol="${colNames[$i]}"
+pKeyIndex=$i
+break
+fi
+done
+rowData=()
+for i in "${!colNames[@]}"
+do
+colName="${colNames[$i]}"
+colType="${colTypes[$i]}"
+echo "Enter value for $col
+
 
 
 
