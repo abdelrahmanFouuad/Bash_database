@@ -78,6 +78,79 @@ break 2
 fi
 done
 }
+function deletetable() {
+    if [[ -z "$selecteddatabase" ]]   
+  then
+        echo "No database selected. Please connect to a database first."
+        return
+    fi
+    while true; do
+        read -p "enter table name you want to delete or type 'exit' to go back: " tname
+        if [[ "$tname" == "exit" ]]   
+  then
+            break
+        fi
+        if [[ -f "$mybase/$selecteddatabase/$tname" && -f "$mybase/$selecteddatabase/.$tname.metadata" ]]   
+  then
+            echo "table $tname is found "
+            break
+        else
+            echo "table not found "
+        fi
+    done
+    if [[ "$tname" == "exit" ]]   
+  then
+        return
+    fi
+    while true; do
+        select option in deleteall deletebyrow exit; do
+            case $option in
+            "deleteall")
+                sed -i '1!d' "$mybase/$selecteddatabase/$tname"
+                echo "all data deleted "
+                ;;
+            "deletebyrow")
+                IFS=':' read -ra cols <"$mybase/$selecteddatabase/.$tname.metadata"
+                echo "choose one of this fields "
+                select colname in ${cols[@]}; do
+                    if [[ -n $colname ]]   
+  then
+                        for ((i = 0; i < ${#cols[@]}; i++)); do
+                            if [[ "${cols[i]}" == "$colname" ]]   
+  then
+                                colnum=$((i + 1))
+                                break
+                            fi
+                        done
+                        break
+                    else
+                        echo "invalid"
+                    fi
+                done
+                read -p "enter the value you want to delete the row when it equals this value " value
+                tempfile="$mybase/$selecteddatabase/.tmpfile"
+                head -n 1 "$mybase/$selecteddatabase/$tname" > "$tempfile"
+                while IFS= read -r line || [[ -n "$line" ]]; do
+                    IFS=':' read -ra fields <<<"$line"
+                    if [[ "${fields[$((colnum - 1))]}" != "$value" ]]   
+  then
+                        echo "$line" >>"$tempfile"
+                    fi
+                done < <(tail -n +2 "$mybase/$selecteddatabase/$tname")
+                mv "$tempfile" "$mybase/$selecteddatabase/$tname"
+                echo "Rows with $colname = $value deleted"
+                ;;
+            "exit")
+                break 2
+                ;;
+            *)
+                echo "invalid option"
+                ;;
+            esac
+        done
+    done
+}
+
 function selecttable() {
     if [[ -z "$selecteddatabase" ]]   
   then
@@ -529,5 +602,102 @@ echo "Enter value for $col
 
 
 
+updateTable() {
+    if [[ -z "$selecteddatabase" ]]   
+  then
+        error "No database selected. Please connect to a database first."
+        return
+    fi
+    echo "Enter Table Name:"
+    read tableName
+    tableF="$mybase/$selecteddatabase/$tableName"
+    metaF="$mybase/$selecteddatabase/.$tableName.metadata"
+    if [ ! -f "$tableF" ]   
+  then
+        error "Table '$tableName' does not exist."
+        return
+    fi
+    if [ ! -f "$metaF" ]   
+  then
+        error "Metadata file for table '$tableName' not found."
+        return
+    fi
+    IFS=':' read -ra cols < <(head -n 1 "$metaF")
+    echo "Available columns: ${cols[@]}"
+    echo "Enter column to filter on:"
+    read filterCol
+    echo "Enter value to match:"
+    read filterVal
+    echo "Enter column to update:"
+    read updateCol
+    echo "Enter new value:"
+    read newVal
+    filterExists=false
+    updateExists=false
+    for c in "${cols[@]}"; do
+        if [[ "$c" == "$filterCol" ]]   
+  then
+            filterExists=true
+        fi
+        if [[ "$c" == "$updateCol" ]]   
+  then
+            updateExists=true
+        fi
+    done
+    if [[ "$filterExists" == false ]] || [[ "$updateExists" == false ]]   
+  then
+        error "Wrong column name."
+        return
+    fi
+    filterIdx=-1
+    updateIdx=-1
+    for i in "${!cols[@]}"; do
+        if [[ "${cols[$i]}" == "$filterCol" ]]   
+  then
+            filterIdx=$((i + 1))
+        fi
+        if [[ "${cols[$i]}" == "$updateCol" ]]   
+  then
+            updateIdx=$((i + 1))
+        fi
+    done
+    tmpF=$(mktemp)
+    head -n 1 "$tableF" > "$tmpF"
+    updated=false
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        if [[ -n "$line" ]]   
+  then
+            IFS=':' read -ra fields <<<"$line"
+            shouldUpdate=false
+            if [[ $filterIdx -le ${#fields[@]} ]]   
+  then
+                filterValue="${fields[$((filterIdx - 1))]}"
+                if [[ "$filterValue" == "$filterVal" ]]   
+  then
+                    shouldUpdate=true
+                fi
+            fi
+            if [[ "$shouldUpdate" == true ]] && [[ $updateIdx -le ${#fields[@]} ]]   
+  then
+                fields[$((updateIdx - 1))]="$newVal"
+                updatedLine=$(IFS=':'; echo "${fields[*]}")
+                echo "$updatedLine" >>"$tmpF"
+                updated=true
+            else
+                echo "$line" >>"$tmpF"
+            fi
+        fi
+    done < <(tail -n +2 "$tableF")
+    if [[ "$updated" == true ]]   
+  then
+        mv "$tmpF" "$tableF"
+        success "Updated rows where $filterCol = $filterVal."
+    else
+        rm "$tmpF"
+        echo "No rows matched the filter criteria ($filterCol = $filterVal)."
+        pause
+    fi
+}
+mainMenu
 
 
